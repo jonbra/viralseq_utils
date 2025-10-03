@@ -12,12 +12,6 @@ if (length(args) < 2) {
 folder  <- args[1] # "/mnt/N/NGS/3-Sekvenseringsbiblioteker/2022/Illumina_RunXXX/Run820_Virus/Run820/"
 outfile <- args[2] # "2023.01.19-HCV_Run829.csv"
 
-# Debug output
-cat("Arguments received:\n")
-cat(sprintf("  folder: '%s'\n", folder))
-cat(sprintf("  outfile: '%s'\n", outfile))
-cat("\n")
-
 # Validate input folder exists
 if (!dir.exists(folder)) {
   stop(paste("Error: Input folder does not exist:", folder), call.=FALSE)
@@ -74,8 +68,8 @@ if (identical(tmp$tmpR1, tmp$tmpR2)) {
     mutate(sample_id = gsub("_.*", "", basename(R1))) %>%
     mutate(
       original_sample_id = sample_id,
-      # Remove invalid characters from sample names (keep only alphanumeric characters)
-      sample_id = str_replace_all(sample_id, "[^A-Za-z0-9]", "")
+      # Remove invalid characters from sample names (keep alphanumeric characters and dashes)
+      sample_id = str_replace_all(sample_id, "[^A-Za-z0-9-]", "")
     ) %>%
     select("sample" = sample_id,
            "fastq_1" = R1,
@@ -121,7 +115,7 @@ if (identical(tmp$tmpR1, tmp$tmpR2)) {
                   modified_samples$original_sample_id[i], 
                   modified_samples$sample[i]))
     }
-    cat("Invalid characters (-, ., and other symbols) have been removed.\n\n")
+    cat("Invalid characters (periods, spaces, and other symbols except dashes) have been removed.\n\n")
   }
   
   # Remove the helper column before writing output
