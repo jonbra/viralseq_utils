@@ -22,5 +22,5 @@ COPY create_samplesheet.R /app/create_samplesheet.R
 # Make the script executable
 RUN chmod +x /app/create_samplesheet.R
 
-# Default command to run the script
-CMD ["Rscript", "/app/create_samplesheet.R"]
+# Set entrypoint to the R script
+ENTRYPOINT ["Rscript", "/app/create_samplesheet.R"]

@@ -12,6 +12,12 @@ if (length(args) < 2) {
 folder  <- args[1] # "/mnt/N/NGS/3-Sekvenseringsbiblioteker/2022/Illumina_RunXXX/Run820_Virus/Run820/"
 outfile <- args[2] # "2023.01.19-HCV_Run829.csv"
 
+# Debug output
+cat("Arguments received:\n")
+cat(sprintf("  folder: '%s'\n", folder))
+cat(sprintf("  outfile: '%s'\n", outfile))
+cat("\n")
+
 # Validate input folder exists
 if (!dir.exists(folder)) {
   stop(paste("Error: Input folder does not exist:", folder), call.=FALSE)
