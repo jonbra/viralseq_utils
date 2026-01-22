@@ -6,11 +6,13 @@ library(stringr)
 
 args <- commandArgs(trailingOnly = TRUE)
 if (length(args) < 2) {
-  stop("Usage: Rscript create_samplesheet.R <path_to_fastq_folders> <samplesheet_name>", call.=FALSE)
+  stop("Usage: Rscript create_samplesheet.R <path_to_fastq_folders> <samplesheet_name> [agent]", call.=FALSE)
 }
 
-folder  <- args[1] # "/mnt/N/NGS/3-Sekvenseringsbiblioteker/2022/Illumina_RunXXX/Run820_Virus/Run820/"
-outfile <- args[2] # "2023.01.19-HCV_Run829.csv"
+folder  <- args[1]
+outfile <- args[2]
+# optional: if provided, filter fastq files by agent (case-insensitive); otherwise keep all
+agens   <- if (length(args) >= 3) args[3] else "ALL"
 
 # Validate input folder exists
 if (!dir.exists(folder)) {
@@ -29,18 +31,20 @@ fastq <- list.files(folder,
            full.names = TRUE,
            pattern = "\\.fastq\\.gz$|\\.fq\\.gz$")
 
-# Filter for HCV files only
-fastq <- fastq[str_detect(fastq, "HCV")]
-
-# Check if any HCV files were found
-if (length(fastq) == 0) {
-  stop("Error: No HCV fastq files found in the specified folder", call.=FALSE)
+# Optional agent filtering (case-insensitive). If agens == "ALL", skip filtering.
+if (toupper(agens) != "ALL") {
+  pattern <- paste0("(?i)", agens)
+  fastq <- fastq[str_detect(fastq, pattern, perl = TRUE)]
+  if (length(fastq) == 0) {
+    stop(paste0("Error: No fastq files matching agent '", agens, "' found in the specified folder"), call.=FALSE)
+  }
+  cat(sprintf("Found %d fastq files matching agent '%s'\n", length(fastq), agens))
+} else {
+  cat(sprintf("Found %d fastq files\n", length(fastq)))
 }
 
-cat(sprintf("Found %d HCV fastq files\n", length(fastq)))
-
-R1 <- sort(fastq[grep("_R1_", fastq)])
-R2 <- sort(fastq[grep("_R2_", fastq)])
+R1 <- sort(fastq[grep("_R1_", fastq, ignore.case = TRUE)])
+R2 <- sort(fastq[grep("_R2_", fastq, ignore.case = TRUE)])
 
 # Check if we have both R1 and R2 files
 if (length(R1) == 0) {
@@ -65,7 +69,7 @@ tmp <- df %>%
 
 if (identical(tmp$tmpR1, tmp$tmpR2)) {
   df <- df %>%
-    mutate(sample_id = gsub("_.*", "", basename(R1))) %>%
+    mutate(sample_id = ifelse(grepl("_", basename(R1)), gsub("_.*", "", basename(R1)), basename(dirname(R1)))) %>%
     mutate(
       original_sample_id = sample_id,
       # Remove invalid characters from sample names (keep alphanumeric characters and dashes)
