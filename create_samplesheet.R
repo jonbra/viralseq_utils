@@ -33,8 +33,10 @@ fastq <- list.files(folder,
 
 # Optional agent filtering (case-insensitive). If agens == "ALL", skip filtering.
 if (toupper(agens) != "ALL") {
-  pattern <- paste0("(?i)", agens)
-  fastq <- fastq[str_detect(fastq, pattern, perl = TRUE)]
+  # Match the agent against the file name (case-insensitive). Matching the
+  # basename rather than the full path avoids false matches from the parent
+  # directory name (e.g. a temp dir called "fastq_hcv").
+  fastq <- fastq[str_detect(basename(fastq), regex(agens, ignore_case = TRUE))]
   if (length(fastq) == 0) {
     stop(paste0("Error: No fastq files matching agent '", agens, "' found in the specified folder"), call.=FALSE)
   }
