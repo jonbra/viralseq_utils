@@ -126,8 +126,12 @@ cat(sprintf("Found %d paired and %d single-end fastq samples\n", nrow(paired_df)
 df <- bind_rows(paired_df, single_end_df) %>%
   mutate(
     original_sample_id = sample_id_raw,
+    # Strip the Illumina machine suffix ("_S<num>" and anything after it, e.g.
+    # "_S7_L001") so the sample name is the human-assigned part only. Names
+    # without that suffix (e.g. SRA accessions) are left untouched.
+    sample = str_replace(sample_id_raw, "_S\\d+(_.*)?$", ""),
     # Remove invalid characters from sample names (keep alphanumeric characters and dashes)
-    sample = str_replace_all(sample_id_raw, "[^A-Za-z0-9-]", "")
+    sample = str_replace_all(sample, "[^A-Za-z0-9-]", "")
   ) %>%
   select(sample, fastq_1, fastq_2, original_sample_id) %>%
   arrange(sample)
